@@ -90,6 +90,28 @@ export interface User {
   status: UserStatus;
 }
 
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  success: boolean;
+  message: string;
+  data: {
+    user: {
+      id: number;
+      accessToken: string;
+      email: string;
+      phone: string;
+      role: string;
+      linked_id: number;
+      company_id: number;
+      deleted: boolean;
+    };
+  };
+}
+
 // ========== Generic slice state ==========
 export interface SliceState<T> {
   items: T[];
