@@ -1,6 +1,7 @@
+import { useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
-import { selectEmail, selectRole, logout } from '@/features/auth/authSlice';
+import { selectCompanyId, selectEmail, selectRole, logout } from '@/features/auth/authSlice';
 import { NavLink } from '@/components/NavLink';
 import { Button } from '@/components/ui/button';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
@@ -8,8 +9,9 @@ import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader,
 } from '@/components/ui/sidebar';
-import { Car, LayoutDashboard, CalendarCheck, Wrench, Truck, FileText, AlertTriangle, LogOut } from 'lucide-react';
+import { Car, LayoutDashboard, CalendarCheck, Wrench, Truck, FileText, AlertTriangle, LogOut, ShieldCheck } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
+import apiClient from '@/services/apiClient';
 
 const navItems = [
   { title: 'Dashboard', url: '/', icon: LayoutDashboard },
@@ -29,14 +31,42 @@ const pageTitles: Record<string, string> = {
   '/jobs': 'Pickup & Delivery Jobs',
   '/documents': 'Documents',
   '/fines': 'PCNs / Fines',
+  '/admin': 'Admin Panel',
 };
 
 export default function AppLayout() {
   const email = useAppSelector(selectEmail);
   const role = useAppSelector(selectRole);
+  const companyId = useAppSelector(selectCompanyId);
   const dispatch = useAppDispatch();
   const location = useLocation();
   const pageTitle = pageTitles[location.pathname] || 'FleetManager';
+  const [companyName, setCompanyName] = useState<string>('');
+
+  useEffect(() => {
+    let isMounted = true;
+    const effectiveCompanyId = companyId ?? 1;
+
+    apiClient
+      .get(`/api/company/${effectiveCompanyId}`)
+      .then((response) => {
+        if (!isMounted) return;
+        const name = response?.data?.data?.name;
+        if (typeof name === 'string' && name.trim()) {
+          setCompanyName(name);
+          return;
+        }
+        setCompanyName(`Company #${effectiveCompanyId}`);
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setCompanyName(`Company #${effectiveCompanyId}`);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [companyId]);
 
   return (
     <SidebarProvider>
@@ -65,6 +95,16 @@ export default function AppLayout() {
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   ))}
+                  {role === 'ADMIN' && (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <NavLink to="/admin" className="hover:bg-muted/50" activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium">
+                          <ShieldCheck className="mr-2 h-4 w-4" />
+                          <span>Admin</span>
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
@@ -89,6 +129,10 @@ export default function AppLayout() {
           <header className="flex h-14 items-center gap-3 border-b bg-card px-4">
             <SidebarTrigger />
             <h2 className="text-lg font-semibold text-card-foreground">{pageTitle}</h2>
+            <div className="ml-auto text-right leading-tight">
+              <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Company</p>
+              <p className="max-w-[220px] truncate text-sm font-medium text-card-foreground">{companyName || `Company #${companyId ?? 1}`}</p>
+            </div>
           </header>
           <main className="flex-1 overflow-auto bg-muted/30 p-6">
             <Outlet />

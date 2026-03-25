@@ -5,9 +5,11 @@ import { fetchBookings, selectActiveBookings, selectAllBookings } from '@/featur
 import { fetchMaintenance, selectUpcomingServices } from '@/features/maintenance/maintenanceSlice';
 import { fetchJobs, selectTodayJobs } from '@/features/jobs/jobsSlice';
 import { fetchFines, selectTotalUnpaidAmount } from '@/features/fines/finesSlice';
+import { selectRole } from '@/features/auth/authSlice';
 import { StatCard } from '@/components/StatCard';
 import { StatusBadge } from '@/components/StatusBadge';
-import { Car, CalendarCheck, Wrench, Truck, AlertTriangle, BarChart3 } from 'lucide-react';
+import { Car, CalendarCheck, Wrench, Truck, AlertTriangle, BarChart3, ShieldCheck } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function DashboardPage() {
   const dispatch = useAppDispatch();
@@ -17,6 +19,8 @@ export default function DashboardPage() {
   const upcomingServices = useAppSelector(selectUpcomingServices);
   const todayJobs = useAppSelector(selectTodayJobs);
   const unpaidTotal = useAppSelector(selectTotalUnpaidAmount);
+  const role = useAppSelector(selectRole);
+  const navigate = useNavigate();
   const rentedCount = cars.filter(c => c.status === 'Rented').length;
 
   useEffect(() => {
@@ -37,6 +41,21 @@ export default function DashboardPage() {
         <StatCard title="Today's Jobs" value={todayJobs.length} icon={Truck} description="Pickups & deliveries" />
         <StatCard title="Unpaid Fines" value={`£${unpaidTotal}`} icon={AlertTriangle} description="Total outstanding" />
       </div>
+
+      {role === 'ADMIN' && (
+        <div
+          className="flex cursor-pointer items-center gap-4 rounded-lg border bg-card p-5 transition-colors hover:bg-muted/50"
+          onClick={() => navigate('/admin')}
+        >
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100 text-purple-700">
+            <ShieldCheck className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-card-foreground">Admin Panel</p>
+            <p className="text-xs text-muted-foreground">Manage office staff and drivers</p>
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-lg border bg-card p-5">
