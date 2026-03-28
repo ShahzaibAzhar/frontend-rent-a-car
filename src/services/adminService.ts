@@ -22,7 +22,7 @@ export const adminService = {
   // ---- Staff (Employee) ----
   getAllStaff: async (): Promise<StaffMember[]> => {
     try {
-      const res = await apiClient.get('/api/employee');
+      const res = await apiClient.get('/api/employee/list');
       const data = res.data?.data;
       if (Array.isArray(data)) return data;
       if (Array.isArray(data?.employees)) return data.employees;
@@ -74,10 +74,11 @@ export const adminService = {
   // ---- Drivers ----
   getAllDrivers: async (): Promise<Driver[]> => {
     try {
-      const res = await apiClient.get('/api/driver');
+      const res = await apiClient.get('/api/driver/list');
       const data = res.data?.data;
       if (Array.isArray(data)) return data;
       if (Array.isArray(data?.drivers)) return data.drivers;
+      if (Array.isArray(data?.users)) return data.users;
       return [];
     } catch (error) {
       handleApiError(error, 'Failed to fetch drivers');
