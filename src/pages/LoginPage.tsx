@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Car } from 'lucide-react';
 import { authService } from '@/services/authService';
+import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const dispatch = useAppDispatch();
@@ -15,6 +16,7 @@ export default function LoginPage() {
   const error = useAppSelector(selectAuthError);
   const [email, setEmail] = useState('abc@gmail.com');
   const [password, setPassword] = useState('123');
+  const [showPassword, setShowPassword] = useState(false);
   const [apiResponse, setApiResponse] = useState<any>(null);
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
 
@@ -54,7 +56,27 @@ export default function LoginPage() {
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Enter any password" />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter any password"
+                className="pr-10" // Adds padding so text doesn't overlap the icon
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 select-none"
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" /> // Custom "hide" icon
+                ) : (
+                  <Eye className="h-4 w-4" />    // Custom "show" icon
+                )}
+              </button>
+            </div>
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" className="w-full" disabled={loading}>
