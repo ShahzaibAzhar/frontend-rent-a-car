@@ -66,6 +66,28 @@ apiClient.interceptors.request.use((config) => {
 
 let refreshingPromise: Promise<string | null> | null = null;
 
+function shouldAttemptRefresh(error: AxiosError): boolean {
+  const status = error.response?.status;
+  if (status === 401) return true;
+  if (status !== 403) return false;
+
+  const data = error.response?.data as
+    | { message?: unknown; error?: unknown }
+    | string
+    | undefined;
+
+  const message =
+    typeof data === 'string'
+      ? data
+      : typeof data?.message === 'string'
+        ? data.message
+        : typeof data?.error === 'string'
+          ? data.error
+          : '';
+
+  return /token|jwt|expired|unauthori(s|z)ed/i.test(message);
+}
+
 async function refreshAccessToken(): Promise<string | null> {
   if (!refreshingPromise) {
     refreshingPromise = (async () => {
@@ -98,7 +120,7 @@ apiClient.interceptors.response.use(
   async (error: AxiosError) => {
     const original = error.config as RetryConfig | undefined;
 
-    if (!original || error.response?.status !== 401 || original._retry) {
+    if (!original || !shouldAttemptRefresh(error) || original._retry) {
       return Promise.reject(error);
     }
 

@@ -38,7 +38,7 @@ const licenseTypeOptions = [
 
 const emptyStaffCreate: CreateStaffRequest = {
   first_name: '', last_name: '', email: '', phone: '',
-  gender: 'male', date_of_birth: '', password: '',
+  gender: 'male', date_of_birth: '',
 };
 
 const emptyStaffUpdate: UpdateStaffRequest = { first_name: '', last_name: '', phone: '' };
@@ -216,7 +216,6 @@ export default function AdminPage() {
           <FormField label="Phone" name="phone" value={staffCreateForm.phone} onChange={setCreateStaff('phone')} type="tel" required />
           <FormField label="Gender" name="gender" value={staffCreateForm.gender} onChange={setCreateStaff('gender')} type="select" options={genderOptions} />
           <FormField label="Date of Birth" name="date_of_birth" value={staffCreateForm.date_of_birth} onChange={setCreateStaff('date_of_birth')} type="date" required />
-          <FormField label="Password" name="password" value={staffCreateForm.password} onChange={setCreateStaff('password')} type="password" required className="sm:col-span-2" />
         </div>
         <div className="mt-4 flex justify-end gap-2">
           <Button variant="outline" onClick={() => setStaffModalOpen(false)}>Cancel</Button>

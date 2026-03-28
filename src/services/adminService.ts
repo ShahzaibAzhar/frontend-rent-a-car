@@ -42,7 +42,6 @@ export const adminService = {
         phone: payload.phone.trim(),
         date_of_birth: payload.date_of_birth,
         gender: payload.gender,
-        password: payload.password,
       };
 
       const res = await apiClient.post('/api/employee/create', requestBody);

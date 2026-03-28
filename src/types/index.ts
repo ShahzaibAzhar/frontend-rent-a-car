@@ -126,7 +126,6 @@ export interface CreateStaffRequest {
   phone: string;
   gender: string;
   date_of_birth: string;
-  password: string;
 }
 
 export interface UpdateStaffRequest {
