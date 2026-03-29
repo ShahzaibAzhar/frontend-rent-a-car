@@ -8,7 +8,7 @@ import { store } from "@/app/store";
 import { useAppSelector } from "@/app/hooks";
 import { selectIsAuthenticated } from "@/features/auth/authSlice";
 import AppLayout from "@/components/AppLayout";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ProtectedRoute, AdminRoute } from "@/components/ProtectedRoute";
 import LoginPage from "@/pages/LoginPage";
 import DashboardPage from "@/pages/DashboardPage";
 import FleetPage from "@/pages/FleetPage";
@@ -17,6 +17,7 @@ import MaintenancePage from "@/pages/MaintenancePage";
 import JobsPage from "@/pages/JobsPage";
 import DocumentsPage from "@/pages/DocumentsPage";
 import FinesPage from "@/pages/FinesPage";
+import AdminPage from "@/pages/AdminPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,11 @@ function AppRoutes() {
           <Route path="/jobs" element={<JobsPage />} />
           <Route path="/documents" element={<DocumentsPage />} />
           <Route path="/fines" element={<FinesPage />} />
+        </Route>
+      </Route>
+      <Route element={<AdminRoute />}>
+        <Route element={<AppLayout />}>
+          <Route path="/admin" element={<AdminPage />} />
         </Route>
       </Route>
       <Route path="*" element={<NotFound />} />

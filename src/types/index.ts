@@ -90,6 +90,90 @@ export interface User {
   status: UserStatus;
 }
 
+// ========== Admin – Staff & Drivers ==========
+export interface StaffMember {
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  gender: string;
+  date_of_birth: string;
+  deleted: boolean;
+  company_id?: number;
+  created_at?: string;
+}
+
+export interface Driver {
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  gender: string;
+  date_of_birth: string;
+  license_type: string;
+  license_expiry: string;
+  deleted: boolean;
+  company_id?: number;
+  created_at?: string;
+}
+
+export interface CreateStaffRequest {
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  gender: string;
+  date_of_birth: string;
+}
+
+export interface UpdateStaffRequest {
+  first_name: string;
+  last_name: string;
+  phone: string;
+}
+
+export interface CreateDriverRequest {
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  gender: string;
+  date_of_birth: string;
+  license_type: string;
+  license_expiry: string;
+  password: string;
+}
+
+export interface UpdateDriverRequest {
+  first_name: string;
+  last_name: string;
+  phone: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  success: boolean;
+  message: string;
+  data: {
+    user: {
+      id: number;
+      accessToken: string;
+      email: string;
+      phone: string;
+      role: string;
+      linked_id: number;
+      company_id: number;
+      deleted: boolean;
+    };
+  };
+}
+
 // ========== Generic slice state ==========
 export interface SliceState<T> {
   items: T[];
