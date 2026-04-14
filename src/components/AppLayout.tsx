@@ -9,7 +9,7 @@ import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader,
 } from '@/components/ui/sidebar';
-import { Car, LayoutDashboard, CalendarCheck, Wrench, Truck, FileText, AlertTriangle, LogOut, ShieldCheck } from 'lucide-react';
+import { Car, LayoutDashboard, CalendarCheck, Wrench, Truck, FileText, AlertTriangle, LogOut, ShieldCheck, Users } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
 import apiClient from '@/services/apiClient';
 
@@ -17,6 +17,7 @@ const navItems = [
   { title: 'Dashboard', url: '/', icon: LayoutDashboard },
   { title: 'Fleet', url: '/fleet', icon: Car },
   { title: 'Bookings', url: '/bookings', icon: CalendarCheck },
+  { title: 'Customers', url: '/customers', icon: Users },
   { title: 'Maintenance', url: '/maintenance', icon: Wrench },
   { title: 'Jobs', url: '/jobs', icon: Truck },
   { title: 'Documents', url: '/documents', icon: FileText },
@@ -28,6 +29,8 @@ const pageTitles: Record<string, string> = {
   '/fleet': 'Fleet Management',
   '/fleet/add': 'Add Vehicle',
   '/bookings': 'Bookings',
+  '/customers': 'Customers',
+  '/customers/add': 'Add Customer',
   '/maintenance': 'Maintenance & Repairs',
   '/jobs': 'Pickup & Delivery Jobs',
   '/documents': 'Documents',

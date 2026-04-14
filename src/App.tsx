@@ -19,6 +19,8 @@ import JobsPage from "@/pages/JobsPage";
 import DocumentsPage from "@/pages/DocumentsPage";
 import FinesPage from "@/pages/FinesPage";
 import AdminPage from "@/pages/AdminPage";
+import CustomersPage from "@/pages/CustomersPage";
+import AddCustomerPage from "@/pages/AddCustomerPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +37,8 @@ function AppRoutes() {
           <Route path="/fleet" element={<FleetPage />} />
           <Route path="/fleet/add" element={<AddVehiclePage />} />
           <Route path="/bookings" element={<BookingsPage />} />
+          <Route path="/customers" element={<CustomersPage />} />
+          <Route path="/customers/add" element={<AddCustomerPage />} />
           <Route path="/maintenance" element={<MaintenancePage />} />
           <Route path="/jobs" element={<JobsPage />} />
           <Route path="/documents" element={<DocumentsPage />} />

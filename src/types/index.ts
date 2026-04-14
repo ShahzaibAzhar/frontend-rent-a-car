@@ -118,6 +118,61 @@ export interface CreateVehicleResponse {
   };
 }
 
+// ========== Customers ==========
+export interface Customer {
+  id: number;
+  company_id?: number;
+  title: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  gender: string;
+  address: string;
+  ni_number: string;
+  profession: string;
+  nationality: string;
+  license_type: string;
+  driver_license_number: string;
+  license_issue_date: string;
+  license_expiry_date: string;
+  date_of_birth: string;
+  deleted: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CustomerListResponse {
+  success: boolean;
+  message: string;
+  data: Customer[];
+}
+
+export interface CreateCustomerRequest {
+  title: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  gender: string;
+  address: string;
+  password: string;
+  ni_number: string;
+  profession: string;
+  nationality: string;
+  license_type: string;
+  driver_license_number: string;
+  license_issue_date: string;
+  license_expiry_date: string;
+  date_of_birth: string;
+}
+
+export interface CreateCustomerResponse {
+  success: boolean;
+  message: string;
+  data: Customer;
+}
+
 // ========== Booking ==========
 export type BookingStatus = 'Upcoming' | 'Active' | 'Completed' | 'Cancelled';
 
