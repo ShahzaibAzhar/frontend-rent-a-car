@@ -1,24 +1,55 @@
-import { Car, DvlaRequest, DvlaResponse } from '@/types';
+import axios from 'axios';
+import {
+  Car,
+  CreateVehicleRequest,
+  CreateVehicleResponse,
+  DvlaRequest,
+  DvlaResponse,
+  DvlaVehicleData,
+  VehicleListItem,
+  VehicleListResponse,
+} from '@/types';
 import apiClient from '@/services/apiClient';
 
-const delay = (ms = 400) => new Promise(r => setTimeout(r, ms));
+function handleFleetApiError(error: unknown, fallback: string): never {
+  if (axios.isAxiosError(error)) {
+    const data = error.response?.data as
+      | { message?: unknown; error?: unknown }
+      | string
+      | undefined;
 
-let cars: Car[] = [
-  { id: '1', registrationNumber: 'AB12 CDE', make: 'Toyota', model: 'Corolla', year: 2022, mileage: 15200, status: 'Available', motExpiry: '2026-08-15', insuranceExpiry: '2026-06-01' },
-  { id: '2', registrationNumber: 'FG34 HIJ', make: 'BMW', model: '3 Series', year: 2023, mileage: 8400, status: 'Rented', motExpiry: '2026-11-20', insuranceExpiry: '2026-09-10' },
-  { id: '3', registrationNumber: 'KL56 MNO', make: 'Ford', model: 'Focus', year: 2021, mileage: 32100, status: 'In Service', motExpiry: '2026-03-05', insuranceExpiry: '2026-04-18' },
-  { id: '4', registrationNumber: 'PQ78 RST', make: 'Mercedes', model: 'A-Class', year: 2023, mileage: 5600, status: 'Available', motExpiry: '2027-01-12', insuranceExpiry: '2026-12-01' },
-  { id: '5', registrationNumber: 'UV90 WXY', make: 'Volkswagen', model: 'Golf', year: 2020, mileage: 45300, status: 'Reserved', motExpiry: '2026-05-22', insuranceExpiry: '2026-07-14' },
-  { id: '6', registrationNumber: 'ZA11 BCD', make: 'Audi', model: 'A3', year: 2022, mileage: 18700, status: 'Available', motExpiry: '2026-09-30', insuranceExpiry: '2026-10-15' },
-  { id: '7', registrationNumber: 'EF22 GHI', make: 'Hyundai', model: 'i30', year: 2021, mileage: 28900, status: 'Rented', motExpiry: '2026-04-10', insuranceExpiry: '2026-05-20' },
-  { id: '8', registrationNumber: 'JK33 LMN', make: 'Kia', model: 'Ceed', year: 2023, mileage: 3200, status: 'Available', motExpiry: '2027-02-28', insuranceExpiry: '2027-01-15' },
-  { id: '9', registrationNumber: 'OP44 QRS', make: 'Nissan', model: 'Qashqai', year: 2022, mileage: 21400, status: 'Rented', motExpiry: '2026-07-18', insuranceExpiry: '2026-08-25' },
-  { id: '10', registrationNumber: 'TU55 VWX', make: 'Vauxhall', model: 'Astra', year: 2020, mileage: 52600, status: 'In Service', motExpiry: '2026-03-01', insuranceExpiry: '2026-03-15' },
-];
+    const message =
+      (typeof data === 'object' && data && typeof data.message === 'string' && data.message) ||
+      (typeof data === 'object' && data && typeof data.error === 'string' && data.error) ||
+      (typeof data === 'string' && data) ||
+      error.message ||
+      fallback;
 
-let nextId = 11;
+    throw new Error(message);
+  }
 
-export const getDvlaInfo = async (registrationNumber: DvlaRequest): Promise<DvlaResponse['data']['dvla']> => {
+  throw new Error(error instanceof Error ? error.message : fallback);
+}
+
+export const mapVehicleToCar = (vehicle: VehicleListItem): Car => {
+  const model = vehicle.model ?? '';
+  const derivedMake = model.trim().split(' ')[0];
+  const mileage = typeof vehicle.mileage === 'string' ? Number(vehicle.mileage) : Number(vehicle.mileage ?? 0);
+
+  return {
+    id: String(vehicle.id),
+    registrationNumber: vehicle.registration_number,
+    make: derivedMake || (vehicle.vehicle_type ?? 'Unknown').toUpperCase(),
+    model,
+    year: new Date().getFullYear(),
+    mileage: Number.isFinite(mileage) ? mileage : 0,
+    status: vehicle.deleted ? 'In Service' : 'Available',
+    motExpiry: '',
+    insuranceExpiry: '',
+  };
+};
+
+export const getDvlaInfo = async (registrationNumber: DvlaRequest): Promise<DvlaVehicleData> => {
   try {
     const response = await apiClient.get<DvlaResponse>(
       '/api/vehicle/dvla/'+ registrationNumber.registration_number,
@@ -39,34 +70,51 @@ export const getDvlaInfo = async (registrationNumber: DvlaRequest): Promise<Dvla
     }
   } catch (error) {
     console.warn('API call failed:', error);
-    throw new Error('Search failed');
+    handleFleetApiError(error, 'Search failed');
   }
 };
 
-export const createVehicle = async (car: Omit<Car, 'id'>): Promise<Car> => {
+export const createVehicle = async (payload: CreateVehicleRequest): Promise<Car> => {
   try {
-    const response = await apiClient.post<{ success: boolean; message: string; data: Car }>('/api/vehicle/create', car);
+    const response = await apiClient.post<CreateVehicleResponse>('/api/vehicle/create', payload);
     const apiData = response.data;
     console.log('Create vehicle API response:', apiData);
 
-    if (apiData.success && apiData.data) {
-      return apiData.data;
-    } else {
-      throw new Error(apiData.message || 'Failed to create vehicle');
+    if (apiData.success && apiData.data?.vehicle) {
+      return mapVehicleToCar(apiData.data.vehicle);
     }
+
+    throw new Error(apiData.message || 'Failed to create vehicle');
   } catch (error) {
     console.warn('Create vehicle API call failed:', error);
-    throw new Error('Failed to create vehicle');
+    handleFleetApiError(error, 'Failed to create vehicle');
   }
 };
 
 export const fleetService = {
-  getAll: async (): Promise<Car[]> => { await delay(); return [...cars]; },
-  getById: async (id: string): Promise<Car | undefined> => { await delay(200); return cars.find(c => c.id === id); },
-  getByRegistrationNumber: async (registrationNumber: string): Promise<Car | undefined> => { await delay(200); return cars.find(c => c.registrationNumber === registrationNumber); },
-  create: async (car: Omit<Car, 'id'>): Promise<Car> => { await delay(); const newCar = { ...car, id: String(nextId++) }; cars.push(newCar); return newCar; },
-  update: async (car: Car): Promise<Car> => { await delay(); cars = cars.map(c => c.id === car.id ? car : c); return car; },
-  delete: async (id: string): Promise<void> => { await delay(200); cars = cars.filter(c => c.id !== id); },
+  getAll: async (): Promise<Car[]> => {
+    try {
+      const response = await apiClient.get<VehicleListResponse>('/api/vehicle/list');
+      const apiData = response.data;
+
+      if (!apiData.success) {
+        throw new Error(apiData.message || 'Failed to fetch vehicles');
+      }
+
+      if (!Array.isArray(apiData.data)) {
+        return [];
+      }
+
+      return apiData.data.map(mapVehicleToCar);
+    } catch (error) {
+      handleFleetApiError(error, 'Failed to fetch vehicles');
+    }
+  },
+  getById: async (): Promise<Car | undefined> => undefined,
+  getByRegistrationNumber: async (): Promise<Car | undefined> => undefined,
+  create: async (payload: CreateVehicleRequest): Promise<Car> => createVehicle(payload),
+  update: async (car: Car): Promise<Car> => car,
+  delete: async (): Promise<void> => undefined,
   getDvlaInfo,
   createVehicle,
 };

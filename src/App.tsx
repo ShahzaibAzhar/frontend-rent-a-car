@@ -12,6 +12,7 @@ import { ProtectedRoute, AdminRoute } from "@/components/ProtectedRoute";
 import LoginPage from "@/pages/LoginPage";
 import DashboardPage from "@/pages/DashboardPage";
 import FleetPage from "@/pages/FleetPage";
+import AddVehiclePage from "@/pages/AddVehiclePage";
 import BookingsPage from "@/pages/BookingsPage";
 import MaintenancePage from "@/pages/MaintenancePage";
 import JobsPage from "@/pages/JobsPage";
@@ -32,6 +33,7 @@ function AppRoutes() {
         <Route element={<AppLayout />}>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/fleet" element={<FleetPage />} />
+          <Route path="/fleet/add" element={<AddVehiclePage />} />
           <Route path="/bookings" element={<BookingsPage />} />
           <Route path="/maintenance" element={<MaintenancePage />} />
           <Route path="/jobs" element={<JobsPage />} />

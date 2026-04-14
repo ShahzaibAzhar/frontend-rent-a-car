@@ -26,6 +26,7 @@ const navItems = [
 const pageTitles: Record<string, string> = {
   '/': 'Dashboard',
   '/fleet': 'Fleet Management',
+  '/fleet/add': 'Add Vehicle',
   '/bookings': 'Bookings',
   '/maintenance': 'Maintenance & Repairs',
   '/jobs': 'Pickup & Delivery Jobs',
