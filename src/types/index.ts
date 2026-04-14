@@ -13,6 +13,41 @@ export interface Car {
   insuranceExpiry: string;
 }
 
+export interface DvlaRequest {
+  registration_number: string;
+}
+
+export interface DvlaResponse {
+  success: boolean;
+  message: string;
+  data: {
+    dvla: {
+      id: string;
+      registration_number: string;
+      co2_emissions: number;
+      engine_capacity: number;
+      art_end_date: string;
+      colour: string;
+      fuel_type: string;
+      make: string;
+      marked_for_export: boolean;
+      month_of_first_registration: string;
+      mot_status: string;
+      revenue_weight: number;
+      tax_due_date: string;
+      tax_status: string;
+      type_approval: string;
+      wheelplan: string;
+      year_of_manufacture: number;
+      euro_status: string;
+      real_driving_emissions: string;
+      date_of_last_v5c_issued: string;
+      updated_at: string;
+      created_at: string;
+    }
+  }
+}
+
 // ========== Booking ==========
 export type BookingStatus = 'Upcoming' | 'Active' | 'Completed' | 'Cancelled';
 

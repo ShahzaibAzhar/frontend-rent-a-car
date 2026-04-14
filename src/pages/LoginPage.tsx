@@ -62,7 +62,7 @@ export default function LoginPage() {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter any password"
+                placeholder="Enter password"
                 className="pr-10" // Adds padding so text doesn't overlap the icon
               />
               <button

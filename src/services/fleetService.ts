@@ -1,4 +1,5 @@
-import { Car } from '@/types';
+import { Car, DvlaRequest, DvlaResponse } from '@/types';
+import apiClient from '@/services/apiClient';
 
 const delay = (ms = 400) => new Promise(r => setTimeout(r, ms));
 
@@ -17,10 +18,55 @@ let cars: Car[] = [
 
 let nextId = 11;
 
+export const getDvlaInfo = async (registrationNumber: DvlaRequest): Promise<DvlaResponse['data']['dvla']> => {
+  try {
+    const response = await apiClient.get<DvlaResponse>(
+      '/api/vehicle/dvla/'+ registrationNumber.registration_number,
+      { timeout: 10000 }
+    );
+
+    const apiData = response.data;
+    console.log('API raw response:', apiData);
+
+    if (
+      apiData.success &&
+      apiData.data &&
+      apiData.data.dvla
+    ) {
+      return apiData.data.dvla;
+    } else {
+      throw new Error(apiData.message || 'Search failed');
+    }
+  } catch (error) {
+    console.warn('API call failed:', error);
+    throw new Error('Search failed');
+  }
+};
+
+export const createVehicle = async (car: Omit<Car, 'id'>): Promise<Car> => {
+  try {
+    const response = await apiClient.post<{ success: boolean; message: string; data: Car }>('/api/vehicle/create', car);
+    const apiData = response.data;
+    console.log('Create vehicle API response:', apiData);
+
+    if (apiData.success && apiData.data) {
+      return apiData.data;
+    } else {
+      throw new Error(apiData.message || 'Failed to create vehicle');
+    }
+  } catch (error) {
+    console.warn('Create vehicle API call failed:', error);
+    throw new Error('Failed to create vehicle');
+  }
+};
+
 export const fleetService = {
   getAll: async (): Promise<Car[]> => { await delay(); return [...cars]; },
   getById: async (id: string): Promise<Car | undefined> => { await delay(200); return cars.find(c => c.id === id); },
+  getByRegistrationNumber: async (registrationNumber: string): Promise<Car | undefined> => { await delay(200); return cars.find(c => c.registrationNumber === registrationNumber); },
   create: async (car: Omit<Car, 'id'>): Promise<Car> => { await delay(); const newCar = { ...car, id: String(nextId++) }; cars.push(newCar); return newCar; },
   update: async (car: Car): Promise<Car> => { await delay(); cars = cars.map(c => c.id === car.id ? car : c); return car; },
   delete: async (id: string): Promise<void> => { await delay(200); cars = cars.filter(c => c.id !== id); },
+  getDvlaInfo,
+  createVehicle,
 };
