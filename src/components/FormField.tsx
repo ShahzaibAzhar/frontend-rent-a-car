@@ -8,7 +8,7 @@ interface FormFieldProps {
   name: string;
   value: string | number;
   onChange: (value: string) => void;
-  type?: 'text' | 'number' | 'date' | 'email' | 'tel' | 'select' | 'password';
+  type?: 'text' | 'number' | 'date' | 'datetime-local' | 'email' | 'tel' | 'select' | 'password';
   options?: { label: string; value: string }[];
   placeholder?: string;
   error?: string;

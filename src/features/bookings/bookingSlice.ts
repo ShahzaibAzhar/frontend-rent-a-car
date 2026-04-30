@@ -1,12 +1,12 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { Booking, SliceState } from '@/types';
+import { Booking, CreateBookingRequest, SliceState } from '@/types';
 import { bookingService } from '@/services/bookingService';
 import { RootState } from '@/app/store';
 
 const initialState: SliceState<Booking> = { items: [], selectedItem: null, loading: false, error: null };
 
 export const fetchBookings = createAsyncThunk('bookings/fetchAll', () => bookingService.getAll());
-export const createBooking = createAsyncThunk('bookings/create', (b: Omit<Booking, 'id'>) => bookingService.create(b));
+export const createBooking = createAsyncThunk('bookings/create', (b: CreateBookingRequest) => bookingService.create(b));
 export const updateBooking = createAsyncThunk('bookings/update', (b: Booking) => bookingService.update(b));
 export const deleteBooking = createAsyncThunk('bookings/delete', (id: string) => bookingService.delete(id).then(() => id));
 

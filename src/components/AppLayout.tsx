@@ -29,6 +29,7 @@ const pageTitles: Record<string, string> = {
   '/fleet': 'Fleet Management',
   '/fleet/add': 'Add Vehicle',
   '/bookings': 'Bookings',
+  '/bookings/new': 'Create Booking',
   '/customers': 'Customers',
   '/customers/add': 'Add Customer',
   '/maintenance': 'Maintenance & Repairs',

@@ -35,12 +35,16 @@ export const mapVehicleToCar = (vehicle: VehicleListItem): Car => {
   const model = vehicle.model ?? '';
   const derivedMake = model.trim().split(' ')[0];
   const mileage = typeof vehicle.mileage === 'string' ? Number(vehicle.mileage) : Number(vehicle.mileage ?? 0);
+  const seatsRaw = vehicle.seats ?? vehicle.no_of_doors;
+  const seats = typeof seatsRaw === 'string' ? Number(seatsRaw) : Number(seatsRaw ?? NaN);
 
   return {
     id: String(vehicle.id),
     registrationNumber: vehicle.registration_number,
     make: derivedMake || (vehicle.vehicle_type ?? 'Unknown').toUpperCase(),
     model,
+    type: vehicle.vehicle_type ?? vehicle.body_type ?? vehicle.vehicle_size ?? 'Unknown',
+    seats: Number.isFinite(seats) ? seats : null,
     year: new Date().getFullYear(),
     mileage: Number.isFinite(mileage) ? mileage : 0,
     status: vehicle.deleted ? 'In Service' : 'Available',

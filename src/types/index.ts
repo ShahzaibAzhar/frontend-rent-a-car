@@ -6,6 +6,8 @@ export interface Car {
   registrationNumber: string;
   make: string;
   model: string;
+  type?: string;
+  seats?: number | null;
   year: number;
   mileage: number;
   status: CarStatus;
@@ -67,6 +69,7 @@ export interface VehicleListItem {
   interior_color?: string;
   tank_capacity?: number | string;
   no_of_doors?: number | string;
+  seats?: number | string;
   bhp?: number | string;
   mileage?: number | string;
   mileage_limit?: number | string;
@@ -175,6 +178,57 @@ export interface CreateCustomerResponse {
 
 // ========== Booking ==========
 export type BookingStatus = 'Upcoming' | 'Active' | 'Completed' | 'Cancelled';
+
+export interface BookingApiRecord {
+  id: number;
+  status?: string;
+  vehicle_id: string | number;
+  customer_id: string | number;
+  pickup_datetime: string;
+  dropoff_datetime: string;
+  pickup_location: string;
+  dropoff_location: string;
+  total_payment: string;
+  paid_payment: string;
+  payment_method: string;
+  booking_type: string;
+  driver_id: string | null;
+  driver_end_datetime: string | null;
+  insurance_included?: boolean;
+  insurance_price: string | null;
+  payment_status?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface BookingListResponse {
+  success: boolean;
+  message: string;
+  data: BookingApiRecord[];
+}
+
+export interface CreateBookingRequest {
+  vehicle_id: string;
+  customer_id: string;
+  pickup_datetime: string;
+  dropoff_datetime: string;
+  pickup_location: string;
+  dropoff_location: string;
+  total_payment: string;
+  paid_payment: string;
+  payment_method: string;
+  booking_type: string;
+  driver_id: string | null;
+  driver_end_datetime: string | null;
+  insurance_included: boolean;
+  insurance_price: string | null;
+}
+
+export interface CreateBookingResponse {
+  success: boolean;
+  message: string;
+  data: BookingApiRecord;
+}
 
 export interface Booking {
   id: string;

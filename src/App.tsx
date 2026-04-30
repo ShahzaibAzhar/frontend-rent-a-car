@@ -14,6 +14,7 @@ import DashboardPage from "@/pages/DashboardPage";
 import FleetPage from "@/pages/FleetPage";
 import AddVehiclePage from "@/pages/AddVehiclePage";
 import BookingsPage from "@/pages/BookingsPage";
+import CreateBookingPage from "@/pages/CreateBookingPage";
 import MaintenancePage from "@/pages/MaintenancePage";
 import JobsPage from "@/pages/JobsPage";
 import DocumentsPage from "@/pages/DocumentsPage";
@@ -37,6 +38,7 @@ function AppRoutes() {
           <Route path="/fleet" element={<FleetPage />} />
           <Route path="/fleet/add" element={<AddVehiclePage />} />
           <Route path="/bookings" element={<BookingsPage />} />
+          <Route path="/bookings/new" element={<CreateBookingPage />} />
           <Route path="/customers" element={<CustomersPage />} />
           <Route path="/customers/add" element={<AddCustomerPage />} />
           <Route path="/maintenance" element={<MaintenancePage />} />

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
-import { fetchBookings, selectAllBookings, selectBookingsLoading, createBooking, updateBooking, deleteBooking } from '@/features/bookings/bookingSlice';
+import { fetchBookings, selectAllBookings, selectBookingsLoading, updateBooking, deleteBooking } from '@/features/bookings/bookingSlice';
 import { fetchCars, selectAvailableCars } from '@/features/fleet/fleetSlice';
 import { PageHeader } from '@/components/PageHeader';
 import { DataTable, Column } from '@/components/DataTable';
@@ -22,6 +23,7 @@ const emptyBooking = { customerName: '', customerPhone: '', startDate: '', endDa
 
 export default function BookingsPage() {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const bookings = useAppSelector(selectAllBookings);
   const loading = useAppSelector(selectBookingsLoading);
   const availableCars = useAppSelector(selectAvailableCars);
@@ -33,13 +35,15 @@ export default function BookingsPage() {
 
   useEffect(() => { dispatch(fetchBookings()); dispatch(fetchCars()); }, [dispatch]);
 
-  const openCreate = () => { setEditing(null); setForm(emptyBooking); setModalOpen(true); };
+  const openCreate = () => navigate('/bookings/new');
   const openEdit = (b: Booking) => { setEditing(b); setForm(b); setModalOpen(true); };
   const openDelete = (b: Booking) => { setEditing(b); setDeleteOpen(true); };
 
   const handleSave = async () => {
-    if (editing) { await dispatch(updateBooking({ ...editing, ...form })); toast({ title: 'Booking updated' }); }
-    else { await dispatch(createBooking(form)); toast({ title: 'Booking created' }); }
+    if (editing) {
+      await dispatch(updateBooking({ ...editing, ...form }));
+      toast({ title: 'Booking updated' });
+    }
     setModalOpen(false);
   };
 
@@ -72,7 +76,7 @@ export default function BookingsPage() {
     <div className="space-y-6">
       <PageHeader title="Bookings" description="Manage customer bookings" actionLabel="New Booking" actionIcon={Plus} onAction={openCreate} />
       <DataTable columns={columns} data={bookings} loading={loading} searchKeys={['customerName', 'customerPhone']} searchPlaceholder="Search customers..." filterKey="status" filterOptions={statusOpts} />
-      <Modal open={modalOpen} onOpenChange={setModalOpen} title={editing ? 'Edit Booking' : 'New Booking'}>
+      <Modal open={modalOpen} onOpenChange={setModalOpen} title="Edit Booking">
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField label="Customer Name" name="name" value={form.customerName} onChange={set('customerName')} required />
           <FormField label="Phone" name="phone" value={form.customerPhone} onChange={set('customerPhone')} type="tel" />
@@ -84,7 +88,7 @@ export default function BookingsPage() {
         </div>
         <div className="mt-4 flex justify-end gap-2">
           <Button variant="outline" onClick={() => setModalOpen(false)}>Cancel</Button>
-          <Button onClick={handleSave}>{editing ? 'Update' : 'Create'}</Button>
+          <Button onClick={handleSave}>Update</Button>
         </div>
       </Modal>
       <ConfirmDialog open={deleteOpen} onOpenChange={setDeleteOpen} title="Delete Booking" description={`Delete booking for ${editing?.customerName}?`} onConfirm={handleDelete} confirmLabel="Delete" />
