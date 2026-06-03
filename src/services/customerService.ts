@@ -1,5 +1,6 @@
 import axios from 'axios';
 import apiClient from '@/services/apiClient';
+import { getErrorMessage } from '@/lib/errorMessage';
 import {
   CreateCustomerRequest,
   CreateCustomerResponse,
@@ -9,22 +10,11 @@ import {
 
 function handleCustomerApiError(error: unknown, fallback: string): never {
   if (axios.isAxiosError(error)) {
-    const data = error.response?.data as
-      | { message?: unknown; error?: unknown }
-      | string
-      | undefined;
-
-    const message =
-      (typeof data === 'object' && data && typeof data.message === 'string' && data.message) ||
-      (typeof data === 'object' && data && typeof data.error === 'string' && data.error) ||
-      (typeof data === 'string' && data) ||
-      error.message ||
-      fallback;
-
+    const message = getErrorMessage(error.response?.data ?? error, fallback);
     throw new Error(message);
   }
 
-  throw new Error(error instanceof Error ? error.message : fallback);
+  throw new Error(getErrorMessage(error, fallback));
 }
 
 export const customerService = {

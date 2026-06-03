@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { createCustomerApi } from '@/features/customers/customerSlice';
 import { useToast } from '@/hooks/use-toast';
+import { getErrorMessage } from '@/lib/errorMessage';
 import { CreateCustomerRequest } from '@/types';
 
 const titleOptions = [
@@ -25,9 +26,9 @@ const genderOptions = [
 ];
 
 const licenseTypeOptions = [
-  { label: 'Learner', value: 'learner' },
-  { label: 'Provisional', value: 'provisional' },
-  { label: 'Full', value: 'full' },
+  { label: 'Learner', value: 'Learner' },
+  { label: 'Provisional', value: 'Provisional' },
+  { label: 'Full', value: 'Full' },
 ];
 
 const emptyCustomerForm: CreateCustomerRequest = {
@@ -38,11 +39,10 @@ const emptyCustomerForm: CreateCustomerRequest = {
   phone: '',
   gender: 'male',
   address: '',
-  password: '',
   ni_number: '',
   profession: '',
   nationality: '',
-  license_type: 'learner',
+  license_type: 'Learner',
   driver_license_number: '',
   license_issue_date: '',
   license_expiry_date: '',
@@ -64,7 +64,6 @@ const customerFields: Array<{
   { key: 'last_name', label: 'Last Name', placeholder: 'Doe', required: true },
   { key: 'email', label: 'Email', type: 'email', placeholder: 'john@example.com', required: true },
   { key: 'phone', label: 'Phone', type: 'tel', placeholder: '03111111001', required: true },
-  { key: 'password', label: 'Password', type: 'password', placeholder: 'Enter password', required: true },
   { key: 'profession', label: 'Profession', placeholder: 'Software engineer' },
   { key: 'address', label: 'Address', placeholder: 'Street, city, country', className: 'sm:col-span-2', required: true },
   { key: 'ni_number', label: 'NI Number', placeholder: '8455342344', required: true },
@@ -100,18 +99,13 @@ export default function AddCustomerPage() {
       return;
     }
 
-    if (!form.password.trim()) {
-      toast({ title: 'Password required', variant: 'destructive' });
-      return;
-    }
-
     setSaving(true);
     try {
       await dispatch(createCustomerApi(form)).unwrap();
       toast({ title: 'Customer created' });
       navigate('/customers');
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to create customer';
+      const message = getErrorMessage(error, 'Failed to create customer');
       toast({ title: 'Save failed', description: message, variant: 'destructive' });
     } finally {
       setSaving(false);

@@ -12,6 +12,7 @@ import { fetchCars, selectAvailableCars, selectFleetLoading } from '@/features/f
 import { fetchDrivers, selectAllDrivers, selectAdminLoading } from '@/features/admin/adminSlice';
 import { createBooking } from '@/features/bookings/bookingSlice';
 import { useToast } from '@/hooks/use-toast';
+import { getErrorMessage } from '@/lib/errorMessage';
 import { CreateBookingRequest, CreateCustomerRequest } from '@/types';
 
 type Step = 1 | 2 | 3;
@@ -38,9 +39,9 @@ const genderOptions = [
 ];
 
 const licenseTypeOptions = [
-  { label: 'Learner', value: 'learner' },
-  { label: 'Provisional', value: 'provisional' },
-  { label: 'Full', value: 'full' },
+  { label: 'Learner', value: 'Learner' },
+  { label: 'Provisional', value: 'Provisional' },
+  { label: 'Full', value: 'Full' },
 ];
 
 const paymentMethodOptions = [
@@ -62,11 +63,10 @@ const emptyCustomerForm: CreateCustomerRequest = {
   phone: '',
   gender: 'male',
   address: '',
-  password: '',
   ni_number: '',
   profession: '',
   nationality: '',
-  license_type: 'learner',
+  license_type: 'Learner',
   driver_license_number: '',
   license_issue_date: '',
   license_expiry_date: '',
@@ -237,7 +237,6 @@ export default function CreateBookingPage() {
         'phone',
         'gender',
         'address',
-        'password',
         'ni_number',
         'nationality',
         'license_type',
@@ -347,13 +346,14 @@ export default function CreateBookingPage() {
         driver_end_datetime: bookingType === 'self' ? null : toIsoString(driverEndDateTime),
         insurance_included: insuranceIncluded,
         insurance_price: insuranceIncluded ? toMoneyString(insurancePrice) : null,
+        status: 'pending',
       };
 
       await dispatch(createBooking(payload)).unwrap();
       toast({ title: 'Booking created successfully' });
       navigate('/bookings');
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to create booking';
+      const message = getErrorMessage(error, 'Failed to create booking');
       toast({ title: 'Create booking failed', description: message, variant: 'destructive' });
     } finally {
       setSaving(false);
@@ -418,7 +418,6 @@ export default function CreateBookingPage() {
                 <FormField label="Last Name" name="last_name" value={customerForm.last_name} onChange={setCustomerField('last_name')} error={errors.last_name} required />
                 <FormField label="Email" name="email" value={customerForm.email} onChange={setCustomerField('email')} type="email" error={errors.email} required />
                 <FormField label="Phone" name="phone" value={customerForm.phone} onChange={setCustomerField('phone')} type="tel" error={errors.phone} required />
-                <FormField label="Password" name="password" value={customerForm.password} onChange={setCustomerField('password')} type="password" error={errors.password} required />
                 <FormField label="Profession" name="profession" value={customerForm.profession} onChange={setCustomerField('profession')} />
                 <FormField label="Address" name="address" value={customerForm.address} onChange={setCustomerField('address')} className="sm:col-span-2" error={errors.address} required />
                 <FormField label="NI Number" name="ni_number" value={customerForm.ni_number} onChange={setCustomerField('ni_number')} error={errors.ni_number} required />

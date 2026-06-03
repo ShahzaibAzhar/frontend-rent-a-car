@@ -159,7 +159,7 @@ export interface CreateCustomerRequest {
   phone: string;
   gender: string;
   address: string;
-  password: string;
+  password?: string;
   ni_number: string;
   profession: string;
   nationality: string;
@@ -177,11 +177,38 @@ export interface CreateCustomerResponse {
 }
 
 // ========== Booking ==========
-export type BookingStatus = 'Upcoming' | 'Active' | 'Completed' | 'Cancelled';
+export const BOOKING_STATUS_ORDER = [
+  'pending',
+  'pending documents with insurance',
+  'pending documents without insurance',
+  'pending document review',
+  'documents approved',
+  'pending agreement signing',
+  'pending handover',
+  'waiting customer confirmation',
+  'done',
+] as const;
+
+export type BookingStatus = (typeof BOOKING_STATUS_ORDER)[number];
+
+export const BOOKING_STATUS_LABELS: Record<BookingStatus, string> = {
+  'pending': 'Pending',
+  'pending documents with insurance': 'Pending Documents (With Insurance)',
+  'pending documents without insurance': 'Pending Documents (Without Insurance)',
+  'pending document review': 'Pending Document Review',
+  'documents approved': 'Documents Approved',
+  'pending agreement signing': 'Pending Agreement Signing',
+  'pending handover': 'Pending Handover',
+  'waiting customer confirmation': 'Waiting Customer Confirmation',
+  'done': 'Done',
+};
 
 export interface BookingApiRecord {
   id: number;
   status?: string;
+  customer_document_status?: string | null;
+  agreement_signing_status?: string | null;
+  agreement_signed_at?: string | null;
   vehicle_id: string | number;
   customer_id: string | number;
   pickup_datetime: string;
@@ -197,8 +224,36 @@ export interface BookingApiRecord {
   insurance_included?: boolean;
   insurance_price: string | null;
   payment_status?: string;
+  customer?: {
+    first_name?: string;
+    last_name?: string;
+    phone?: string;
+  };
+  booking_agreement?: BookingFileRecord[];
+  customer_signature?: BookingFileRecord[];
+  customer_insurance_documents?: BookingFileRecord[];
+  vehicle_pickup_pictures?: BookingFileRecord[];
+  vehicle_dropoff_pictures?: BookingFileRecord[];
   created_at?: string;
   updated_at?: string;
+}
+
+export interface BookingFileRecord {
+  id: number;
+  file_name?: string;
+  file_path?: string;
+  file_type?: string;
+  mime_type?: string;
+  created_at?: string;
+}
+
+export interface BookingDocument {
+  id: string;
+  name: string;
+  url: string;
+  type: string;
+  mimeType: string;
+  uploadedAt: string;
 }
 
 export interface BookingListResponse {
@@ -222,6 +277,7 @@ export interface CreateBookingRequest {
   driver_end_datetime: string | null;
   insurance_included: boolean;
   insurance_price: string | null;
+  status?: BookingStatus;
 }
 
 export interface CreateBookingResponse {
@@ -232,13 +288,35 @@ export interface CreateBookingResponse {
 
 export interface Booking {
   id: string;
+  customerId: string;
   customerName: string;
   customerPhone: string;
+  pickupDateTime: string;
+  dropoffDateTime: string;
   startDate: string;
   endDate: string;
+  pickupLocation: string;
+  dropoffLocation: string;
+  vehicleId: string;
   assignedCarId: string;
   totalPrice: number;
+  paidPrice: number;
+  paymentMethod: string;
+  bookingType: string;
+  driverId: string | null;
+  driverEndDateTime: string | null;
+  insuranceIncluded: boolean;
+  insurancePrice: number;
+  paymentStatus?: string;
   status: BookingStatus;
+  customerDocumentStatus?: string | null;
+  agreementSigningStatus?: string | null;
+  agreementSignedAt?: string | null;
+  bookingAgreement: BookingDocument[];
+  customerSignature: BookingDocument[];
+  customerInsuranceDocuments: BookingDocument[];
+  vehiclePickupPictures: BookingDocument[];
+  vehicleDropoffPictures: BookingDocument[];
 }
 
 // ========== Maintenance ==========
