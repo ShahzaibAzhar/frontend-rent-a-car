@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
-import { fetchCars, selectAllCars, selectFleetLoading, createCar, updateCar, deleteCar } from '@/features/fleet/fleetSlice';
+import { fetchCars, selectAllCars, selectFleetLoading, updateCar, deleteCar } from '@/features/fleet/fleetSlice';
 import { PageHeader } from '@/components/PageHeader';
 import { DataTable, Column } from '@/components/DataTable';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -23,6 +24,7 @@ const emptyCar = { registrationNumber: '', make: '', model: '', year: new Date()
 
 export default function FleetPage() {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const cars = useAppSelector(selectAllCars);
   const loading = useAppSelector(selectFleetLoading);
   const { toast } = useToast();
@@ -33,7 +35,8 @@ export default function FleetPage() {
 
   useEffect(() => { dispatch(fetchCars()); }, [dispatch]);
 
-  const openCreate = () => { setEditing(null); setForm(emptyCar); setModalOpen(true); };
+  const openCreate = () => navigate('/fleet/add');
+
   const openEdit = (car: Car) => { setEditing(car); setForm(car); setModalOpen(true); };
   const openDelete = (car: Car) => { setEditing(car); setDeleteOpen(true); };
 
@@ -41,9 +44,6 @@ export default function FleetPage() {
     if (editing) {
       await dispatch(updateCar({ ...editing, ...form }));
       toast({ title: 'Vehicle updated' });
-    } else {
-      await dispatch(createCar(form));
-      toast({ title: 'Vehicle added' });
     }
     setModalOpen(false);
   };

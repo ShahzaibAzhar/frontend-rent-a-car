@@ -6,6 +6,8 @@ import jobsReducer from '@/features/jobs/jobsSlice';
 import documentsReducer from '@/features/documents/documentsSlice';
 import finesReducer from '@/features/fines/finesSlice';
 import authReducer from '@/features/auth/authSlice';
+import adminReducer from '@/features/admin/adminSlice';
+import customersReducer from '@/features/customers/customerSlice';
 
 export const store = configureStore({
   reducer: {
@@ -16,6 +18,8 @@ export const store = configureStore({
     documents: documentsReducer,
     fines: finesReducer,
     auth: authReducer,
+    admin: adminReducer,
+    customers: customersReducer,
   },
 });
 

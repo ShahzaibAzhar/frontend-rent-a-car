@@ -8,15 +8,20 @@ import { store } from "@/app/store";
 import { useAppSelector } from "@/app/hooks";
 import { selectIsAuthenticated } from "@/features/auth/authSlice";
 import AppLayout from "@/components/AppLayout";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ProtectedRoute, AdminRoute } from "@/components/ProtectedRoute";
 import LoginPage from "@/pages/LoginPage";
 import DashboardPage from "@/pages/DashboardPage";
 import FleetPage from "@/pages/FleetPage";
+import AddVehiclePage from "@/pages/AddVehiclePage";
 import BookingsPage from "@/pages/BookingsPage";
+import CreateBookingPage from "@/pages/CreateBookingPage";
 import MaintenancePage from "@/pages/MaintenancePage";
 import JobsPage from "@/pages/JobsPage";
 import DocumentsPage from "@/pages/DocumentsPage";
 import FinesPage from "@/pages/FinesPage";
+import AdminPage from "@/pages/AdminPage";
+import CustomersPage from "@/pages/CustomersPage";
+import AddCustomerPage from "@/pages/AddCustomerPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,11 +36,20 @@ function AppRoutes() {
         <Route element={<AppLayout />}>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/fleet" element={<FleetPage />} />
+          <Route path="/fleet/add" element={<AddVehiclePage />} />
           <Route path="/bookings" element={<BookingsPage />} />
+          <Route path="/bookings/new" element={<CreateBookingPage />} />
+          <Route path="/customers" element={<CustomersPage />} />
+          <Route path="/customers/add" element={<AddCustomerPage />} />
           <Route path="/maintenance" element={<MaintenancePage />} />
           <Route path="/jobs" element={<JobsPage />} />
           <Route path="/documents" element={<DocumentsPage />} />
           <Route path="/fines" element={<FinesPage />} />
+        </Route>
+      </Route>
+      <Route element={<AdminRoute />}>
+        <Route element={<AppLayout />}>
+          <Route path="/admin" element={<AdminPage />} />
         </Route>
       </Route>
       <Route path="*" element={<NotFound />} />
