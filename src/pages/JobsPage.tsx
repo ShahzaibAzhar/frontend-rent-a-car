@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { PickupDeliveryJob, JobStatus } from '@/types';
 import { Plus, Pencil, Trash2, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { formatDisplayDate } from '@/lib/utils';
 
 const statusOpts = [
   { label: 'Pending', value: 'Pending' }, { label: 'In Progress', value: 'In Progress' }, { label: 'Completed', value: 'Completed' },
@@ -60,7 +61,7 @@ export default function JobsPage() {
     { key: 'bookingId', header: 'Booking', render: j => { const b = bookings.find(x => x.id === j.bookingId); return b ? `#${b.id} ${b.customerName}` : j.bookingId; } },
     { key: 'driverName', header: 'Driver', sortable: true },
     { key: 'type', header: 'Type', render: j => <StatusBadge status={j.type} /> },
-    { key: 'scheduledTime', header: 'Scheduled', sortable: true, render: j => new Date(j.scheduledTime).toLocaleString() },
+    { key: 'scheduledTime', header: 'Scheduled', sortable: true, render: j => formatDisplayDate(j.scheduledTime) },
     { key: 'status', header: 'Status', render: j => <StatusBadge status={j.status} /> },
     { key: 'actions', header: '', render: j => (
       <div className="flex gap-1">

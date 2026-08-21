@@ -1,4 +1,4 @@
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Loader2, Save, Search } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
@@ -6,8 +6,8 @@ import { FormField } from '@/components/FormField';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { CreateVehicleRequest, DvlaVehicleData } from '@/types';
-import { createVehicle, getDvlaInfo } from '@/services/fleetService';
+import { CreateVehicleRequest, DvlaVehicleData, VehicleCouncil } from '@/types';
+import { createVehicle, getDvlaInfo, getVehicleCouncils } from '@/services/fleetService';
 
 const vehicleTypeOptions = [
   { label: 'SUV', value: 'suv' },
@@ -42,6 +42,7 @@ const booleanOptions = [
 
 const emptyVehicleForm: CreateVehicleRequest = {
   registration_number: '',
+  council: '',
   vin_number: '',
   total_buying_cost: '',
   vehicle_type: '',
@@ -72,6 +73,7 @@ const editableFields: Array<{
   required?: boolean;
 }> = [
   { key: 'registration_number', label: 'Registration Number', placeholder: 'ETS-3-AAA112205', required: true },
+  { key: 'council', label: 'Council', required: true },
   { key: 'vin_number', label: 'VIN Number', placeholder: '454623333', required: true },
   { key: 'total_buying_cost', label: 'Total Buying Cost', type: 'number', placeholder: '38400' },
   { key: 'vehicle_type', label: 'Vehicle Type', type: 'select', options: vehicleTypeOptions },
@@ -133,6 +135,8 @@ export default function AddVehiclePage() {
   const { toast } = useToast();
   const [registrationInput, setRegistrationInput] = useState('');
   const [form, setForm] = useState<CreateVehicleRequest>(emptyVehicleForm);
+  const [councils, setCouncils] = useState<VehicleCouncil[]>([]);
+  const [councilsLoading, setCouncilsLoading] = useState(false);
   const [dvlaData, setDvlaData] = useState<DvlaVehicleData | null>(null);
   const [searching, setSearching] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -144,6 +148,40 @@ export default function AddVehiclePage() {
     })),
     [dvlaData]
   );
+
+  const councilOptions = useMemo(
+    () => councils.map((council) => ({ label: council.name, value: council.name })),
+    [councils],
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadCouncils = async () => {
+      setCouncilsLoading(true);
+      try {
+        const values = await getVehicleCouncils();
+        if (!cancelled) {
+          setCouncils(values);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          const message = error instanceof Error ? error.message : 'Failed to load councils';
+          toast({ title: 'Councils unavailable', description: message, variant: 'destructive' });
+        }
+      } finally {
+        if (!cancelled) {
+          setCouncilsLoading(false);
+        }
+      }
+    };
+
+    loadCouncils();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [toast]);
 
   const setField = (key: keyof CreateVehicleRequest) => (value: string) => {
     setForm((current) => ({
@@ -200,6 +238,11 @@ export default function AddVehiclePage() {
 
     if (!form.vin_number.trim()) {
       toast({ title: 'VIN number is required', variant: 'destructive' });
+      return;
+    }
+
+    if (!form.council.trim()) {
+      toast({ title: 'Council is required', variant: 'destructive' });
       return;
     }
 
@@ -266,9 +309,11 @@ export default function AddVehiclePage() {
                 name={field.key}
                 value={form[field.key]}
                 onChange={setField(field.key)}
-                type={field.type}
-                options={field.options}
-                placeholder={field.placeholder}
+                type={field.key === 'council' ? (councilOptions.length > 0 ? 'select' : 'text') : field.type}
+                options={field.key === 'council' ? councilOptions : field.options}
+                placeholder={field.key === 'council'
+                  ? (councilsLoading ? 'Loading councils...' : 'Enter council')
+                  : field.placeholder}
                 required={field.required}
                 className={field.key === 'model' ? 'sm:col-span-2' : undefined}
               />

@@ -13,12 +13,16 @@ import LoginPage from "@/pages/LoginPage";
 import DashboardPage from "@/pages/DashboardPage";
 import FleetPage from "@/pages/FleetPage";
 import AddVehiclePage from "@/pages/AddVehiclePage";
+import CouncilsPage from "@/pages/CouncilsPage";
+import VehicleExpensesPage from "@/pages/VehicleExpensesPage";
 import BookingsPage from "@/pages/BookingsPage";
+import BookingDetailsPage from "@/pages/BookingDetailsPage";
 import CreateBookingPage from "@/pages/CreateBookingPage";
 import MaintenancePage from "@/pages/MaintenancePage";
 import JobsPage from "@/pages/JobsPage";
 import DocumentsPage from "@/pages/DocumentsPage";
 import FinesPage from "@/pages/FinesPage";
+import FineDetailsPage from "@/pages/FineDetailsPage";
 import AdminPage from "@/pages/AdminPage";
 import CustomersPage from "@/pages/CustomersPage";
 import AddCustomerPage from "@/pages/AddCustomerPage";
@@ -37,7 +41,10 @@ function AppRoutes() {
           <Route path="/" element={<DashboardPage />} />
           <Route path="/fleet" element={<FleetPage />} />
           <Route path="/fleet/add" element={<AddVehiclePage />} />
+          <Route path="/fleet/councils" element={<CouncilsPage />} />
+          <Route path="/fleet/expenses" element={<VehicleExpensesPage />} />
           <Route path="/bookings" element={<BookingsPage />} />
+          <Route path="/bookings/:id" element={<BookingDetailsPage />} />
           <Route path="/bookings/new" element={<CreateBookingPage />} />
           <Route path="/customers" element={<CustomersPage />} />
           <Route path="/customers/add" element={<AddCustomerPage />} />
@@ -45,6 +52,7 @@ function AppRoutes() {
           <Route path="/jobs" element={<JobsPage />} />
           <Route path="/documents" element={<DocumentsPage />} />
           <Route path="/fines" element={<FinesPage />} />
+          <Route path="/fines/:id" element={<FineDetailsPage />} />
         </Route>
       </Route>
       <Route element={<AdminRoute />}>

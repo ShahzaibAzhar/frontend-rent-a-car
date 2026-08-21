@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { CarDocument, DocumentType } from '@/types';
 import { Plus, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { formatDisplayDate } from '@/lib/utils';
 
 const typeOpts = [
   { label: 'Insurance', value: 'Insurance' }, { label: 'MOT', value: 'MOT' },
@@ -55,14 +56,14 @@ export default function DocumentsPage() {
     const diffDays = Math.ceil((d.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     if (diffDays < 0) return <StatusBadge status="Expired" variant={{ Expired: 'bg-red-100 text-red-700' }} />;
     if (diffDays <= 30) return <StatusBadge status={`${diffDays}d left`} variant={{ [`${diffDays}d left`]: 'bg-amber-100 text-amber-700' }} />;
-    return <span className="text-sm">{date}</span>;
+    return <span className="text-sm">{formatDisplayDate(date)}</span>;
   };
 
   const columns: Column<CarDocument>[] = [
     { key: 'carId', header: 'Vehicle', render: d => { const c = cars.find(x => x.id === d.carId); return c ? c.registrationNumber : d.carId; } },
     { key: 'type', header: 'Type', render: d => <StatusBadge status={d.type} /> },
     { key: 'fileName', header: 'File Name' },
-    { key: 'uploadDate', header: 'Uploaded', sortable: true },
+    { key: 'uploadDate', header: 'Uploaded', sortable: true, render: d => formatDisplayDate(d.uploadDate) },
     { key: 'expiryDate', header: 'Expiry', render: d => getExpiryBadge(d.expiryDate) },
     { key: 'actions', header: '', render: d => (
       <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={e => { e.stopPropagation(); setDeleting(d); setDeleteOpen(true); }}><Trash2 className="h-3.5 w-3.5" /></Button>

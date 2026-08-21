@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StaffMember, Driver, CreateStaffRequest, UpdateStaffRequest, CreateDriverRequest, UpdateDriverRequest } from '@/types';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { formatDisplayDate } from '@/lib/utils';
 
 function getErrMsg(err: unknown): string {
   if (err instanceof Error) return err.message;
@@ -153,7 +154,7 @@ export default function AdminPage() {
     { key: 'email', header: 'Email', sortable: true },
     { key: 'phone', header: 'Phone' },
     { key: 'gender', header: 'Gender', render: (m) => <span className="capitalize">{m.gender}</span> },
-    { key: 'date_of_birth', header: 'Date of Birth' },
+    { key: 'date_of_birth', header: 'Date of Birth', render: (m) => formatDisplayDate(m.date_of_birth) },
     { key: 'deleted', header: 'Status', render: (m) => <StatusBadge status={m.deleted ? 'Deleted' : 'Active'} /> },
     {
       key: 'actions', header: '', render: (m) => (
@@ -171,7 +172,7 @@ export default function AdminPage() {
     { key: 'email', header: 'Email', sortable: true },
     { key: 'phone', header: 'Phone' },
     { key: 'license_type', header: 'License Type', render: (d) => <span className="capitalize">{d.license_type}</span> },
-    { key: 'license_expiry', header: 'License Expiry' },
+    { key: 'license_expiry', header: 'License Expiry', render: (d) => formatDisplayDate(d.license_expiry) },
     { key: 'deleted', header: 'Status', render: (d) => <StatusBadge status={d.deleted ? 'Deleted' : 'Active'} /> },
     {
       key: 'actions', header: '', render: (d) => (

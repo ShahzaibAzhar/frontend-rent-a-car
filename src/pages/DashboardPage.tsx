@@ -5,15 +5,18 @@ import { fetchBookings, selectActiveBookings, selectAllBookings } from '@/featur
 import { fetchMaintenance, selectUpcomingServices } from '@/features/maintenance/maintenanceSlice';
 import { fetchJobs, selectTodayJobs } from '@/features/jobs/jobsSlice';
 import { fetchFines, selectTotalUnpaidAmount } from '@/features/fines/finesSlice';
+import { fetchCustomers, selectAllCustomers } from '@/features/customers/customerSlice';
 import { selectRole } from '@/features/auth/authSlice';
 import { StatCard } from '@/components/StatCard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Car, CalendarCheck, Wrench, Truck, AlertTriangle, BarChart3, ShieldCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { formatDisplayDate } from '@/lib/utils';
 
 export default function DashboardPage() {
   const dispatch = useAppDispatch();
   const cars = useAppSelector(selectAllCars);
+  const customers = useAppSelector(selectAllCustomers);
   const bookings = useAppSelector(selectAllBookings);
   const activeBookings = useAppSelector(selectActiveBookings);
   const upcomingServices = useAppSelector(selectUpcomingServices);
@@ -22,9 +25,34 @@ export default function DashboardPage() {
   const role = useAppSelector(selectRole);
   const navigate = useNavigate();
   const rentedCount = cars.filter(c => c.status === 'Rented').length;
+  const carById = new Map(cars.map((car) => [car.id, car]));
+  const customerById = new Map(
+    customers.map((customer) => [String(customer.id), `${customer.first_name} ${customer.last_name}`.trim()])
+  );
+
+  const getCustomerDisplayName = (customerId: string, bookingCustomerName: string) => {
+    const nameFromCustomerList = customerById.get(customerId);
+    if (nameFromCustomerList) return nameFromCustomerList;
+
+    if (!/^customer\s*#?\s*\d+$/i.test(bookingCustomerName.trim())) {
+      return bookingCustomerName;
+    }
+
+    return 'Unknown customer';
+  };
+
+  const getCarDisplayName = (assignedCarId: string) => {
+    const car = carById.get(assignedCarId);
+    if (!car) return `#${assignedCarId}`;
+
+    const reg = car.registrationNumber || `#${assignedCarId}`;
+    const makeModel = `${car.make || ''} ${car.model || ''}`.trim();
+    return makeModel ? `${reg} · ${makeModel}` : reg;
+  };
 
   useEffect(() => {
     dispatch(fetchCars());
+    dispatch(fetchCustomers());
     dispatch(fetchBookings());
     dispatch(fetchMaintenance());
     dispatch(fetchJobs());
@@ -34,12 +62,12 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <StatCard title="Total Fleet" value={cars.length} icon={Car} description={`${rentedCount} currently rented`} />
-        <StatCard title="Active Bookings" value={activeBookings.length} icon={CalendarCheck} description={`${bookings.length} total bookings`} />
-        <StatCard title="Upcoming Services" value={upcomingServices.length} icon={Wrench} description="Next 7 days" />
-        <StatCard title="Cars Rented" value={rentedCount} icon={BarChart3} description={`${Math.round((rentedCount / (cars.length || 1)) * 100)}% utilization`} />
-        <StatCard title="Today's Jobs" value={todayJobs.length} icon={Truck} description="Pickups & deliveries" />
-        <StatCard title="Unpaid Fines" value={`£${unpaidTotal}`} icon={AlertTriangle} description="Total outstanding" />
+        <StatCard title="Total Fleet" value={cars.length} icon={Car} description={`${rentedCount} currently rented`} onClick={() => navigate('/fleet')} />
+        <StatCard title="Active Bookings" value={activeBookings.length} icon={CalendarCheck} description={`${bookings.length} total bookings`} onClick={() => navigate('/bookings')} />
+        <StatCard title="Upcoming Services" value={upcomingServices.length} icon={Wrench} description="Next 7 days" onClick={() => navigate('/maintenance')} />
+        <StatCard title="Cars Rented" value={rentedCount} icon={BarChart3} description={`${Math.round((rentedCount / (cars.length || 1)) * 100)}% utilization`} onClick={() => navigate('/fleet')} />
+        <StatCard title="Today's Jobs" value={todayJobs.length} icon={Truck} description="Pickups & deliveries" onClick={() => navigate('/jobs')} />
+        <StatCard title="Unpaid Fines" value={`£${unpaidTotal}`} icon={AlertTriangle} description="Total outstanding" onClick={() => navigate('/fines')} />
       </div>
 
       {role === 'ADMIN' && (
@@ -62,10 +90,18 @@ export default function DashboardPage() {
           <h3 className="mb-4 text-base font-semibold text-card-foreground">Recent Bookings</h3>
           <div className="space-y-3">
             {bookings.slice(0, 5).map(b => (
-              <div key={b.id} className="flex items-center justify-between rounded-md border p-3">
+              <div
+                key={b.id}
+                className="flex cursor-pointer items-center justify-between rounded-md border p-3 transition-colors hover:bg-muted/40"
+                onClick={() => navigate(`/bookings/${b.id}`)}
+              >
                 <div>
-                  <p className="text-sm font-medium text-card-foreground">{b.customerName}</p>
-                  <p className="text-xs text-muted-foreground">{b.startDate} — {b.endDate}</p>
+                  <p className="text-sm font-medium text-card-foreground">{getCustomerDisplayName(b.customerId, b.customerName)}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Car: {getCarDisplayName(b.assignedCarId)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Start: {formatDisplayDate(b.startDate)}</p>
+                  <p className="text-xs text-muted-foreground">End: {formatDisplayDate(b.endDate)}</p>
                 </div>
                 <StatusBadge status={b.status} />
               </div>
@@ -79,7 +115,7 @@ export default function DashboardPage() {
               <div key={s.id} className="flex items-center justify-between rounded-md border p-3">
                 <div>
                   <p className="text-sm font-medium text-card-foreground">{s.serviceType}</p>
-                  <p className="text-xs text-muted-foreground">Car #{s.carId} · {s.scheduledDate}</p>
+                  <p className="text-xs text-muted-foreground">Car #{s.carId} · {formatDisplayDate(s.scheduledDate)}</p>
                 </div>
                 <StatusBadge status={s.status} />
               </div>

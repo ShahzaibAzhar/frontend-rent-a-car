@@ -6,6 +6,7 @@ export interface Car {
   registrationNumber: string;
   make: string;
   model: string;
+  council?: string;
   type?: string;
   seats?: number | null;
   year: number;
@@ -58,6 +59,16 @@ export interface VehicleListItem {
   id: number;
   company_id?: number;
   registration_number: string;
+  council_id?: number | string;
+  council_name?: string;
+  council?:
+    | string
+    | {
+      id?: number | string;
+      council_name?: string;
+      name?: string;
+      title?: string;
+    };
   vin_number?: string;
   total_buying_cost?: string;
   vehicle_type?: string;
@@ -91,6 +102,7 @@ export interface VehicleListResponse {
 
 export interface CreateVehicleRequest {
   registration_number: string;
+  council: string;
   vin_number: string;
   total_buying_cost: string;
   vehicle_type: string;
@@ -119,6 +131,125 @@ export interface CreateVehicleResponse {
     vehicle: VehicleListItem;
     dvla?: DvlaVehicleData;
   };
+}
+
+export interface VehicleCouncil {
+  id: string;
+  name: string;
+}
+
+export interface VehicleCouncilListResponse {
+  success: boolean;
+  message: string;
+  data: Array<
+    | string
+    | {
+      id?: number | string;
+      council_name?: string;
+      name?: string;
+      title?: string;
+    }
+  >;
+}
+
+export interface VehicleCouncilCreateRequest {
+  council_name?: string;
+  name?: string;
+}
+
+export interface VehicleCouncilCreateResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    id?: number | string;
+    council_name?: string;
+    name?: string;
+  };
+}
+
+export interface VehicleCouncilUpdateRequest {
+  council_name?: string;
+  name?: string;
+}
+
+export interface VehicleCouncilUpdateResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    id?: number | string;
+    council_name?: string;
+    name?: string;
+  };
+}
+
+export interface VehicleExpenseRecord {
+  id: number | string;
+  vehicle_id?: number | string;
+  vehicle_registration?: string;
+  title?: string;
+  type?: string;
+  mileage?: number | string;
+  cost?: number | string;
+  amount?: number | string;
+  total_amount?: number | string;
+  paid_amount?: number | string;
+  paid_date?: string;
+  date?: string;
+  expense_date?: string;
+  description?: string;
+  note?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface VehicleExpense {
+  id: string;
+  vehicleId: string;
+  vehicleRegistration: string;
+  title: string;
+  type: string;
+  mileage: number;
+  amount: number;
+  paidAmount: number;
+  paidDate: string;
+  expenseDate: string;
+  description: string;
+}
+
+export interface VehicleExpenseCreateRequest {
+  type: string;
+  mileage: string;
+  total_amount: string;
+  paid_amount: string;
+  date: string;
+  paid_date: string;
+  description?: string;
+}
+
+export interface VehicleExpenseUpdateRequest {
+  type?: string;
+  mileage?: string;
+  total_amount?: string;
+  paid_amount?: string;
+  date?: string;
+  paid_date?: string;
+  description?: string;
+}
+
+export interface VehicleExpenseListResponse {
+  success: boolean;
+  message: string;
+  data: VehicleExpenseRecord[];
+}
+
+export interface AvailableVehicleSearchRequest {
+  pickup_date: string;
+  pickup_time: string;
+  dropoff_date: string;
+  dropoff_time: string;
+  pickup_location?: string;
+  vehicle_type?: string;
+  council?: string;
 }
 
 // ========== Customers ==========
@@ -361,9 +492,53 @@ export interface CarDocument {
 // ========== Fines ==========
 export type FineStatus = 'Unpaid' | 'Paid' | 'Disputed';
 
+export interface FineStatusHistoryItem {
+  id: string;
+  status: string;
+  updatedByEmail?: string;
+  updatedByRole?: string;
+  note?: string;
+  createdAt?: string;
+}
+
+export interface FineCustomerSummary {
+  id: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+}
+
+export interface FineBookingSummary {
+  id: string;
+  pickupDateTime?: string;
+  dropoffDateTime?: string;
+  pickupLocation?: string;
+  dropoffLocation?: string;
+  bookingType?: string;
+  paymentMethod?: string;
+  paymentStatus?: string;
+  status?: string;
+}
+
 export interface Fine {
   id: string;
-  carId: string;
+  carId?: string;
+  bookingId?: string;
+  customerId?: string;
+  vehicleId?: string;
+  pcnRefNo?: string;
+  vehicleRegistration: string;
+  vehicleMake?: string;
+  vehicleModel?: string;
+  reasonOfCharge?: string;
+  location?: string;
+  datetimeOfEvent?: string;
+  pcnPicture?: string;
+  paidBy?: string | null;
+  paidDateTime?: string | null;
+  customer?: FineCustomerSummary | null;
+  booking?: FineBookingSummary | null;
+  statusHistory: FineStatusHistoryItem[];
   issueDate: string;
   dueDate: string;
   amount: number;

@@ -16,6 +16,8 @@ import apiClient from '@/services/apiClient';
 const navItems = [
   { title: 'Dashboard', url: '/', icon: LayoutDashboard },
   { title: 'Fleet', url: '/fleet', icon: Car },
+  { title: 'Councils', url: '/fleet/councils', icon: ShieldCheck },
+  { title: 'Vehicle Expenses', url: '/fleet/expenses', icon: FileText },
   { title: 'Bookings', url: '/bookings', icon: CalendarCheck },
   { title: 'Customers', url: '/customers', icon: Users },
   { title: 'Maintenance', url: '/maintenance', icon: Wrench },
@@ -28,7 +30,10 @@ const pageTitles: Record<string, string> = {
   '/': 'Dashboard',
   '/fleet': 'Fleet Management',
   '/fleet/add': 'Add Vehicle',
+  '/fleet/councils': 'Councils',
+  '/fleet/expenses': 'Vehicle Expenses',
   '/bookings': 'Bookings',
+  '/bookings/:id': 'Booking Details',
   '/bookings/new': 'Create Booking',
   '/customers': 'Customers',
   '/customers/add': 'Add Customer',
@@ -36,8 +41,16 @@ const pageTitles: Record<string, string> = {
   '/jobs': 'Pickup & Delivery Jobs',
   '/documents': 'Documents',
   '/fines': 'PCNs / Fines',
+  '/fines/:id': 'PCN Details',
   '/admin': 'Admin Panel',
 };
+
+function getPageTitle(pathname: string): string {
+  if (pageTitles[pathname]) return pageTitles[pathname];
+  if (pathname.startsWith('/bookings/')) return pageTitles['/bookings/:id'];
+  if (pathname.startsWith('/fines/')) return pageTitles['/fines/:id'];
+  return 'FleetManager';
+}
 
 export default function AppLayout() {
   const email = useAppSelector(selectEmail);
@@ -45,7 +58,7 @@ export default function AppLayout() {
   const companyId = useAppSelector(selectCompanyId);
   const dispatch = useAppDispatch();
   const location = useLocation();
-  const pageTitle = pageTitles[location.pathname] || 'FleetManager';
+  const pageTitle = getPageTitle(location.pathname);
   const [companyName, setCompanyName] = useState<string>('');
 
   useEffect(() => {

@@ -3,7 +3,17 @@ import { Car, SliceState } from '@/types';
 import { fleetService, getDvlaInfo, createVehicle } from '@/services/fleetService';
 import { RootState } from '@/app/store';
 
-const initialState: SliceState<Car> = { items: [], selectedItem: null, loading: false, error: null };
+interface FleetState extends SliceState<Car> {
+  rollbackById: Record<string, Car | null>;
+}
+
+const initialState: FleetState = {
+  items: [],
+  selectedItem: null,
+  loading: false,
+  error: null,
+  rollbackById: {},
+};
 
 export const fetchCars = createAsyncThunk('fleet/fetchAll', () => fleetService.getAll());
 export const fetchCarByRegistrationNumber = createAsyncThunk('fleet/fetchByRegNumber', (registrationNumber: string) => getDvlaInfo({ registration_number: registrationNumber }));
@@ -26,8 +36,43 @@ const fleetSlice = createSlice({
       .addCase(fetchCarByRegistrationNumber.rejected, (s, a) => { s.loading = false; s.error = a.error.message || 'Failed'; })
       .addCase(createCar.fulfilled, (s, a) => { s.items.push(a.payload); })
       .addCase(createVehicleApi.fulfilled, (s, a) => { s.items.push(a.payload); })
-      .addCase(updateCar.fulfilled, (s, a) => { s.items = s.items.map(c => c.id === a.payload.id ? a.payload : c); })
-      .addCase(deleteCar.fulfilled, (s, a) => { s.items = s.items.filter(c => c.id !== a.payload); });
+      .addCase(updateCar.pending, (s, a) => {
+        const incoming = a.meta.arg;
+        const existing = s.items.find((car) => car.id === incoming.id) || null;
+        s.rollbackById[incoming.id] = existing;
+        s.items = s.items.map((car) => (car.id === incoming.id ? incoming : car));
+      })
+      .addCase(updateCar.fulfilled, (s, a) => {
+        s.items = s.items.map(c => c.id === a.payload.id ? a.payload : c);
+        delete s.rollbackById[a.payload.id];
+      })
+      .addCase(updateCar.rejected, (s, a) => {
+        const incoming = a.meta.arg;
+        const rollback = s.rollbackById[incoming.id];
+        if (rollback) {
+          s.items = s.items.map((car) => (car.id === incoming.id ? rollback : car));
+        }
+        delete s.rollbackById[incoming.id];
+        s.error = a.error.message || 'Failed';
+      })
+      .addCase(deleteCar.pending, (s, a) => {
+        const id = a.meta.arg;
+        const existing = s.items.find((car) => car.id === id) || null;
+        s.rollbackById[id] = existing;
+        s.items = s.items.filter((car) => car.id !== id);
+      })
+      .addCase(deleteCar.fulfilled, (s, a) => {
+        delete s.rollbackById[a.payload];
+      })
+      .addCase(deleteCar.rejected, (s, a) => {
+        const id = a.meta.arg;
+        const rollback = s.rollbackById[id];
+        if (rollback) {
+          s.items.push(rollback);
+        }
+        delete s.rollbackById[id];
+        s.error = a.error.message || 'Failed';
+      });
   },
 });
 

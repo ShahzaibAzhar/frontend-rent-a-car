@@ -10,10 +10,7 @@ import {
   selectCustomersLoading,
 } from '@/features/customers/customerSlice';
 import { Customer } from '@/types';
-
-function formatDate(value: string) {
-  return value ? value.slice(0, 10) : 'N/A';
-}
+import { formatDisplayDate } from '@/lib/utils';
 
 function formatText(value: string) {
   return value ? value.replace(/(^\w|[-\s]\w)/g, (letter) => letter.toUpperCase()) : 'N/A';
@@ -60,7 +57,7 @@ export default function CustomersPage() {
     },
     { key: 'driver_license_number', header: 'License No.' },
     { key: 'nationality', header: 'Nationality', render: (customer) => formatText(customer.nationality) },
-    { key: 'date_of_birth', header: 'Date of Birth', sortable: true, render: (customer) => formatDate(customer.date_of_birth) },
+    { key: 'date_of_birth', header: 'Date of Birth', sortable: true, render: (customer) => formatDisplayDate(customer.date_of_birth) },
   ];
 
   return (

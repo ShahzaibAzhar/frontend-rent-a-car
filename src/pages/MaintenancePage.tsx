@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { MaintenanceJob, MaintenanceStatus } from '@/types';
 import { Plus, Pencil, Trash2, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { formatDisplayDate } from '@/lib/utils';
 
 const statusOpts = [
   { label: 'Scheduled', value: 'Scheduled' }, { label: 'In Progress', value: 'In Progress' }, { label: 'Completed', value: 'Completed' },
@@ -59,7 +60,7 @@ export default function MaintenancePage() {
     { key: 'carId', header: 'Car', render: j => { const c = cars.find(x => x.id === j.carId); return c ? `${c.registrationNumber}` : j.carId; } },
     { key: 'serviceType', header: 'Type', sortable: true },
     { key: 'description', header: 'Description' },
-    { key: 'scheduledDate', header: 'Scheduled', sortable: true },
+    { key: 'scheduledDate', header: 'Scheduled', sortable: true, render: j => formatDisplayDate(j.scheduledDate) },
     { key: 'cost', header: 'Cost', render: j => `£${j.cost}` },
     { key: 'status', header: 'Status', render: j => <StatusBadge status={j.status} /> },
     { key: 'actions', header: '', render: j => (

@@ -11,9 +11,12 @@ import { fetchCustomers, selectAllCustomers, selectCustomersLoading, createCusto
 import { fetchCars, selectAvailableCars, selectFleetLoading } from '@/features/fleet/fleetSlice';
 import { fetchDrivers, selectAllDrivers, selectAdminLoading } from '@/features/admin/adminSlice';
 import { createBooking } from '@/features/bookings/bookingSlice';
+import { buildCouncilOptions, filterVehiclesByCriteria } from '@/features/bookings/vehicleFilterUtils';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errorMessage';
-import { CreateBookingRequest, CreateCustomerRequest } from '@/types';
+import { formatDisplayDate } from '@/lib/utils';
+import { getVehicleCouncils, searchAvailableVehicles } from '@/services/fleetService';
+import { Car, CreateBookingRequest, CreateCustomerRequest, VehicleCouncil } from '@/types';
 
 type Step = 1 | 2 | 3;
 type CustomerMode = 'existing' | 'new';
@@ -115,8 +118,12 @@ export default function CreateBookingPage() {
   const [customerForm, setCustomerForm] = useState<CreateCustomerRequest>(emptyCustomerForm);
 
   const [vehicleId, setVehicleId] = useState('');
+  const [councilFilter, setCouncilFilter] = useState('all');
   const [seatFilter, setSeatFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [councils, setCouncils] = useState<VehicleCouncil[]>([]);
+  const [availableSearchResults, setAvailableSearchResults] = useState<Car[] | null>(null);
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
 
   const [pickupDateTime, setPickupDateTime] = useState('');
   const [durationHours, setDurationHours] = useState('24');
@@ -141,6 +148,27 @@ export default function CreateBookingPage() {
   }, [dispatch]);
 
   useEffect(() => {
+    let cancelled = false;
+
+    const loadCouncils = async () => {
+      try {
+        const values = await getVehicleCouncils();
+        if (!cancelled) {
+          setCouncils(values);
+        }
+      } catch {
+        // Keep booking flow usable even if councils endpoint is temporarily unavailable.
+      }
+    };
+
+    loadCouncils();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     if (!pickupDateTime || !durationHours || dropoffEdited) return;
 
     const hours = Number(durationHours);
@@ -153,6 +181,14 @@ export default function CreateBookingPage() {
     setDropoffDateTime(toLocalDateTimeValue(dropoff));
   }, [pickupDateTime, durationHours, dropoffEdited]);
 
+  useEffect(() => {
+    if (pickupDateTime) return;
+    const now = new Date();
+    const in24Hours = new Date(now.getTime() + (24 * 60 * 60 * 1000));
+    setPickupDateTime(toLocalDateTimeValue(now));
+    setDropoffDateTime(toLocalDateTimeValue(in24Hours));
+  }, [pickupDateTime]);
+
   const customerOptions = useMemo(
     () => customers.map((customer) => ({
       label: `${customer.first_name} ${customer.last_name} (${customer.phone})`,
@@ -161,17 +197,19 @@ export default function CreateBookingPage() {
     [customers],
   );
 
+  const vehiclePool = availableSearchResults ?? availableCars;
+
   const vehicleOptions = useMemo(
-    () => availableCars.map((car) => ({
+    () => vehiclePool.map((car) => ({
       label: `${car.registrationNumber} - ${car.make} ${car.model}`,
       value: car.id,
     })),
-    [availableCars],
+    [vehiclePool],
   );
 
   const seatOptions = useMemo(
     () => {
-      const values = Array.from(new Set(availableCars
+      const values = Array.from(new Set(vehiclePool
         .map((car) => car.seats)
         .filter((seats): seats is number => typeof seats === 'number' && Number.isFinite(seats))));
 
@@ -180,12 +218,12 @@ export default function CreateBookingPage() {
         ...values.sort((a, b) => a - b).map((value) => ({ label: `${value} seats`, value: String(value) })),
       ];
     },
-    [availableCars],
+    [vehiclePool],
   );
 
   const typeOptions = useMemo(
     () => {
-      const values = Array.from(new Set(availableCars
+      const values = Array.from(new Set(vehiclePool
         .map((car) => (car.type || '').trim())
         .filter((type) => type.length > 0)));
 
@@ -194,17 +232,25 @@ export default function CreateBookingPage() {
         ...values.sort((a, b) => a.localeCompare(b)).map((value) => ({ label: value, value })),
       ];
     },
-    [availableCars],
+    [vehiclePool],
+  );
+
+  const councilOptions = useMemo(
+    () => buildCouncilOptions(councils, vehiclePool),
+    [councils, vehiclePool],
   );
 
   const filteredVehicles = useMemo(
-    () => availableCars.filter((car) => {
-      const matchesSeats = seatFilter === 'all' || String(car.seats ?? '') === seatFilter;
-      const matchesType = typeFilter === 'all' || (car.type || '').trim() === typeFilter;
-      return matchesSeats && matchesType;
-    }),
-    [availableCars, seatFilter, typeFilter],
+    () => filterVehiclesByCriteria(vehiclePool, { council: councilFilter, seat: seatFilter, type: typeFilter }),
+    [vehiclePool, councilFilter, seatFilter, typeFilter],
   );
+
+  useEffect(() => {
+    if (!vehicleId) return;
+    if (!filteredVehicles.some((car) => car.id === vehicleId)) {
+      setVehicleId('');
+    }
+  }, [filteredVehicles, vehicleId]);
 
   const driverOptions = useMemo(
     () => drivers
@@ -360,6 +406,39 @@ export default function CreateBookingPage() {
     }
   };
 
+  const handleSearchAvailability = async () => {
+    if (!pickupDateTime || !dropoffDateTime) {
+      toast({
+        title: 'Pickup and dropoff are required',
+        description: 'Set pickup and dropoff date/time to search availability.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setAvailabilityLoading(true);
+    try {
+      const result = await searchAvailableVehicles({
+        pickupDateTime,
+        dropoffDateTime,
+        pickupLocation,
+        vehicleType: typeFilter === 'all' ? undefined : typeFilter,
+        council: councilFilter === 'all' ? undefined : councilFilter,
+      });
+      setAvailableSearchResults(result);
+      toast({ title: 'Availability refreshed', description: `${result.length} vehicle(s) returned from server.` });
+    } catch (error) {
+      const message = getErrorMessage(error, 'Failed to fetch available vehicles');
+      toast({ title: 'Availability search failed', description: message, variant: 'destructive' });
+    } finally {
+      setAvailabilityLoading(false);
+    }
+  };
+
+  const clearAvailabilitySearch = () => {
+    setAvailableSearchResults(null);
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader title="Create Booking" description="Complete all 3 steps to submit a booking.">
@@ -437,16 +516,49 @@ export default function CreateBookingPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-xl">Vehicle</CardTitle>
-            <CardDescription>Only available vehicles are shown. Filter by seats and type, then pick one from the list.</CardDescription>
+            <CardDescription>Use server-side availability search with council/type, then refine client-side and select a vehicle.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <FormField label="Pickup Date and Time" name="search_pickup_datetime" value={pickupDateTime} onChange={setPickupDateTime} type="datetime-local" required />
+              <FormField
+                label="Dropoff Date and Time"
+                name="search_dropoff_datetime"
+                value={dropoffDateTime}
+                onChange={(value) => {
+                  setDropoffDateTime(value);
+                  setDropoffEdited(true);
+                }}
+                type="datetime-local"
+                required
+              />
+              <FormField label="Pickup Location" name="search_pickup_location" value={pickupLocation} onChange={setPickupLocation} />
+              <div className="flex items-end gap-2">
+                <Button type="button" onClick={handleSearchAvailability} disabled={availabilityLoading} className="w-full">
+                  {availabilityLoading ? 'Searching...' : 'Search Available'}
+                </Button>
+                {availableSearchResults && (
+                  <Button type="button" variant="outline" onClick={clearAvailabilitySearch}>
+                    Reset
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-3">
+              <FormField label="Filter by Council" name="filter_council" value={councilFilter} onChange={setCouncilFilter} type="select" options={councilOptions} />
               <FormField label="Filter by Seats" name="filter_seats" value={seatFilter} onChange={setSeatFilter} type="select" options={seatOptions} />
               <FormField label="Filter by Type" name="filter_type" value={typeFilter} onChange={setTypeFilter} type="select" options={typeOptions} />
             </div>
 
+            {availableSearchResults && (
+              <p className="text-xs text-muted-foreground">
+                Showing server availability results ({availableSearchResults.length} vehicles).
+              </p>
+            )}
+
             <div className="space-y-2">
-              {fleetLoading && <p className="text-sm text-muted-foreground">Loading vehicles...</p>}
+              {fleetLoading && !availableSearchResults && <p className="text-sm text-muted-foreground">Loading vehicles...</p>}
 
               {!fleetLoading && filteredVehicles.length === 0 && (
                 <p className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
@@ -467,7 +579,7 @@ export default function CreateBookingPage() {
                       <div>
                         <p className="font-medium">{car.registrationNumber} - {car.make} {car.model}</p>
                         <p className="text-xs text-muted-foreground">
-                          Type: {car.type || 'Unknown'} | Seats: {car.seats ?? 'Unknown'}
+                          Council: {car.council || 'Unknown'} | Type: {car.type || 'Unknown'} | Seats: {car.seats ?? 'Unknown'}
                         </p>
                       </div>
                       {isSelected && <span className="text-xs font-medium text-primary">Selected</span>}
@@ -557,8 +669,8 @@ export default function CreateBookingPage() {
             <div className="rounded-md border bg-muted/30 p-4 text-sm">
               <p><span className="font-medium">Customer:</span> {customerMode === 'existing' ? selectedCustomerLabel : `${customerForm.first_name} ${customerForm.last_name}`.trim() || 'New customer'}</p>
               <p><span className="font-medium">Vehicle:</span> {selectedVehicleLabel}</p>
-              <p><span className="font-medium">Pickup:</span> {pickupDateTime || '-'}</p>
-              <p><span className="font-medium">Dropoff:</span> {dropoffDateTime || '-'}</p>
+              <p><span className="font-medium">Pickup:</span> {formatDisplayDate(pickupDateTime, '-')}</p>
+              <p><span className="font-medium">Dropoff:</span> {formatDisplayDate(dropoffDateTime, '-')}</p>
               <p><span className="font-medium">Total:</span> {toMoneyString(totalPayment)}</p>
             </div>
           </CardContent>
